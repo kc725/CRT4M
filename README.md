@@ -1,90 +1,163 @@
-# CRT4M Reader — Project Analysis and Run Instructions
+# CRT4M Reader
 
-## Summary
+A modern, modular scholarly reading assistant built with React and Electron. Import PDFs or text files, extract and display content, and interact with an AI-powered sidebar for translations, notes, and vocabulary assistance.
 
-CRT4M Reader is a client-side React-based scholarly reading assistant that provides document import (PDF / plain text), text extraction, and an in-app AI assistant UI. The app is bootstrapped with Vite and Tailwind, uses PDF.js for PDF text extraction, and renders a single-page reader interface in [src/App.tsx](src/App.tsx#L1).
+## Features
+
+- 📖 **Document Import** — Upload PDF or plain text files for instant viewing
+- 🔍 **Text Extraction** — Client-side PDF parsing with PDF.js
+- 💬 **AI Assistant Sidebar** — Collapsible panel with translation, notes, and vocabulary tabs
+- 🎨 **Responsive Design** — Clean Material Design 3 interface with Tailwind CSS
+- ⚛️ **Modern Stack** — React 19 + Vite + TypeScript + Electron
+- 📱 **Cross-Platform** — Runs as web app or native Electron desktop app
 
 ## Quick Start
 
-Prerequisites: Node.js (recommended v18+), npm or compatible package manager.
+### Prerequisites
+- Node.js v18 or later
+- npm or yarn
 
-1. Install dependencies:
+### Installation & Development
 
-   ```bash
-   npm install
-   ```
+```bash
+# Install dependencies
+npm install
 
-2. Add environment variables (optional): create `.env.local` and set:
+# Run development server (web)
+npm run dev
 
-   ```text
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+# Run Electron app with hot reload
+npm run electron:dev
 
-   `vite.config.ts` maps `GEMINI_API_KEY` into `process.env.GEMINI_API_KEY` at build time.
+# Build for production (web)
+npm run build
 
-3. Run the dev server:
+# Build & package Electron app
+npm run electron:build
+```
 
-   ```bash
-   npm run dev
-   ```
+## Project Structure
 
-4. Build / preview:
+```
+src/
+├── App.tsx                          # Main orchestrator component
+├── components/
+│   ├── Header.tsx                   # Navigation bar with search
+│   ├── Sidebar.tsx                  # AI assistant panel
+│   ├── Reader.tsx                   # Document display
+│   ├── ProgressControls.tsx         # Page navigation
+│   └── common/
+│       ├── SidebarTab.tsx           # Reusable tab component
+│       └── FloatingButton.tsx       # Floating action buttons
+├── hooks/
+│   ├── useDocumentUpload.ts         # File upload & PDF parsing logic
+│   └── useSidebarState.ts           # Sidebar state management
+├── types/
+│   └── document.ts                  # DocumentData interface
+├── constants/
+│   └── defaultDocument.ts           # Sample document content
+├── main.tsx                         # React entry point
+└── index.css                        # Tailwind + custom utilities
 
-   ```bash
-   npm run build
-   npm run preview
-   ```
+electron/
+├── main.js                          # Electron main process
+└── preload.js                       # Preload script for IPC
 
-## Project Structure (key files)
+Configuration files:
+├── vite.config.ts                   # Vite configuration
+├── tsconfig.json                    # TypeScript options
+├── tailwind.config.js               # Tailwind theming
+└── package.json                     # Dependencies & scripts
+```
 
-- [index.html](index.html) — app entry HTML.
-- [vite.config.ts](vite.config.ts) — Vite config, adds Tailwind plugin and defines `GEMINI_API_KEY`.
-- [tsconfig.json](tsconfig.json) — TypeScript compiler options.
-- [package.json](package.json) — scripts and dependencies.
-- [src/App.tsx](src/App.tsx) — main reader UI, PDF/text import and client-side processing.
-- [src/main.tsx](src/main.tsx) — React entry.
-- [src/index.css](src/index.css) — Tailwind + custom CSS utilities.
-- [metadata.json](metadata.json) — app metadata.
+## Architecture
 
-## Notable Dependencies & Observations
+### Component Hierarchy
+- **App** (state orchestrator)
+  - Header (navigation & search)
+  - Sidebar (AI assistant)
+  - Reader (document display)
+  - ProgressControls (page navigation)
 
-- React 19 + Vite 6 are used for the frontend.
-- `pdfjs-dist` is used to extract text from uploaded PDFs in the browser (`src/App.tsx`).
-- Tailwind is enabled via `@tailwindcss/vite` and a custom theme is in [src/index.css](src/index.css#L1).
-- The package list includes `@google/genai` and `express` but this repository appears to be a purely client-side app: there are no server files in the workspace. If you intend to call server-side APIs or host an API proxy, please add server code or remove unused deps.
-- `vite` is listed in both `dependencies` and `devDependencies`; prefer keeping it only in `devDependencies`.
+### Key Hooks
+- `useDocumentUpload()` — Handles PDF/text file parsing via PDF.js
+- `useSidebarState()` — Manages sidebar open/close and tab selection
 
-## Runtime Behavior and Security Notes
+### Design System
+- Material Design 3 color palette (primary, secondary, tertiary)
+- Custom Tailwind theme in `index.css`
+- Responsive breakpoints: mobile, tablet, desktop
 
-- Uploaded PDFs are processed entirely in the browser via PDF.js — no server upload required.
-- `GEMINI_API_KEY` is injected at build time in `vite.config.ts`. Avoid committing API keys; provide them via CI / environment variables and add `.env.local` to `.gitignore`.
+## Environment Variables (Optional)
 
-## Suggested Improvements
+Create an `.env.local` file to add optional configurations:
 
-- Remove unused dependencies (`express`, `@google/genai`) or add server code that uses them.
-- Move `vite` to `devDependencies` only.
-- Add an example env file: create [`.env.example`](.env.example) documenting required variables.
-- Add basic linting / formatting (ESLint / Prettier) and a CI workflow to run `npm run lint`.
-- Add tests for critical UI behaviors and PDF extraction (unit or E2E).
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-## Where to Look Next
+The build process (Vite) makes these available at `process.env.*` at build time.
 
-- Read the reader UI: [src/App.tsx](src/App.tsx#L1).
-- Verify environment handling: [vite.config.ts](vite.config.ts#L1).
-- Check scripts and dependencies: [package.json](package.json#L1).
+## Supported File Formats
 
-If you want, I can:
+- **PDF** — Text extraction via PDF.js library
+- **Plain Text** — Direct import with line-based paragraph splitting
 
-- remove unused dependencies and update `package.json`,
-- add a `.env.example`, or
-- open a PR with the suggested cleanup and a CI workflow.
+## Development Commands
 
----
-Generated: automated project analysis and updated README.
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Web development server (Vite) |
+| `npm run electron:dev` | Electron app with hot reload |
+| `npm run build` | Production build (web) |
+| `npm run electron:build` | Build & package Electron app |
+| `npm run preview` | Preview production build |
 
-**Electron Support**
-- **Files:** [electron/main.js](electron/main.js), [electron/preload.js](electron/preload.js)
-- **Package changes:** `main` set to `electron/main.js`; devDependencies added: `electron`, `electron-builder`, `concurrently`, `wait-on`, `cross-env`.
-- **Dev (hot-reload):** Install deps then run `npm run electron:dev` — starts Vite and opens Electron pointed at `http://localhost:3000`.
-- **Build / Package:** Run `npm run electron:build` — builds the renderer with Vite and packages with `electron-builder` (config is in `package.json`).
-- **After `npm audit fix --force`:** Run `npm install` so `package-lock.json` and `node_modules` are consistent, then review and commit both `package.json` and `package-lock.json`. If you want `package.json` to exactly reflect the lockfile top-level versions, sync them manually (e.g. `npm install <pkg>@<version> --save`) or run a small sync script.
+## Dependencies
+
+### Core
+- **react** — UI framework
+- **typescript** — Type safety
+- **vite** — Build tool & dev server
+- **tailwindcss** — Utility-first CSS
+- **pdfjs-dist** — PDF text extraction
+
+### UI & Animation
+- **lucide-react** — Icon library
+- **motion** (Framer Motion) — Animations
+
+### Desktop
+- **electron** — Desktop app framework
+- **electron-builder** — Package & distribute
+- **concurrently** — Run multiple commands
+- **wait-on** — Wait for dev server startup
+
+## Deployment
+
+### Web
+```bash
+npm run build
+# Deploy `dist/` folder to any static host
+```
+
+### Desktop (macOS, Windows, Linux)
+```bash
+npm run electron:build
+# Outputs packaged apps in `dist/` directory
+```
+
+## Notes
+
+- The app is primarily **client-side** — no backend server required for basic functionality
+- PDF parsing happens entirely in the browser (no server upload needed)
+- Electron support is built-in for native desktop distribution
+- Custom theming can be modified in [src/index.css](src/index.css)
+
+## Future Enhancements
+
+- [ ] Implement AI backend integration (Gemini API)
+- [ ] Add search functionality across documents
+- [ ] Support for more file formats (EPUB, Word docs)
+- [ ] Annotation and highlighting tools
+- [ ] Local storage for saved notes and bookmarks
+- [ ] Dark mode toggle
