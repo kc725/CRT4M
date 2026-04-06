@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import * as pdfjs from 'pdfjs-dist';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { DocumentData } from '../types/document';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - use bundled worker
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, onPageReset: () => void) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -13,7 +15,7 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
     fileInputRef.current?.click();
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -23,23 +25,28 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
         const numPages = pdf.numPages;
-        const pagesContent: string[] = [];
+        const pageImages: string[] = [];
 
-        // Extract text from all pages
-        for (let i = 1; i <= numPages; i++) {
+        // Extract pages from PDF
+         for (let i = 1; i <= numPages; i++) {
           const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(' ');
-          pagesContent.push(pageText);
-        }
+          const viewport = page.getViewport({ scale: 1.5 }); // scale up for sharpness
+
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+
+          const ctx = canvas.getContext('2d')!;
+          await page.render({ canvasContext: ctx, viewport }).promise;
+
+          pageImages.push(canvas.toDataURL('image/png'));
+         }
 
         onDocumentLoad({
           title: file.name.replace('.pdf', ''),
-          author: "Uploaded Document",
-          content: pagesContent,
-          totalPages: numPages
+          content: pageImages,
+          totalPages: numPages,
+          isPDF: true,
         });
         onPageReset();
       } else if (file.type === 'text/plain') {
@@ -47,9 +54,9 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
         const paragraphs = text.split('\n').filter(p => p.trim() !== '');
         onDocumentLoad({
           title: file.name,
-          author: "Uploaded Text",
           content: paragraphs,
-          totalPages: 1
+          totalPages: 1,
+          isPDF: false,
         });
         onPageReset();
       }

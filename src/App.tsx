@@ -6,11 +6,14 @@ import { ProgressControls } from './components/ProgressControls';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
 import { DocumentData } from './types/document';
-import { DEFAULT_DOC } from './constants/defaultDocument';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [document, setDocument] = useState<DocumentData>(DEFAULT_DOC);
+  const [document, setDocument] = useState<DocumentData>({
+    title: '',
+    content: [],
+    totalPages: 0
+  });
   
   const { isSidebarOpen, setIsSidebarOpen, selectedTab, setSelectedTab } = useSidebarState();
   const { fileInputRef, isUploading, handleImportClick, handleFileUpload } = useDocumentUpload(
