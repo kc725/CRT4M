@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pdfplumber
+python-multipart
+
+# AI providers
+google-generativeai
+openai
+anthropic

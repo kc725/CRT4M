@@ -1,163 +1,255 @@
 # CRT4M Reader
 
-A modern, modular scholarly reading assistant built with React and Electron. Import PDFs or text files, extract and display content, and interact with an AI-powered sidebar for translations, notes, and vocabulary assistance.
-
-## Features
-
-- 📖 **Document Import** — Upload PDF or plain text files for instant viewing
-- 🔍 **Text Extraction** — Client-side PDF parsing with PDF.js
-- 💬 **AI Assistant Sidebar** — Collapsible panel with translation, notes, and vocabulary tabs
-- 🎨 **Responsive Design** — Clean Material Design 3 interface with Tailwind CSS
-- ⚛️ **Modern Stack** — React 19 + Vite + TypeScript + Electron
-- 📱 **Cross-Platform** — Runs as web app or native Electron desktop app
-
-## Quick Start
-
-### Prerequisites
-- Node.js v18 or later
-- npm or yarn
-
-### Installation & Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server (web)
-npm run dev
-
-# Run Electron app with hot reload
-npm run electron:dev
-
-# Build for production (web)
-npm run build
-
-# Build & package Electron app
-npm run electron:build
-```
-
-## Project Structure
-
-```
-src/
-├── App.tsx                          # Main orchestrator component
-├── components/
-│   ├── Header.tsx                   # Navigation bar with search
-│   ├── Sidebar.tsx                  # AI assistant panel
-│   ├── Reader.tsx                   # Document display
-│   ├── ProgressControls.tsx         # Page navigation
-│   └── common/
-│       ├── SidebarTab.tsx           # Reusable tab component
-│       └── FloatingButton.tsx       # Floating action buttons
-├── hooks/
-│   ├── useDocumentUpload.ts         # File upload & PDF parsing logic
-│   └── useSidebarState.ts           # Sidebar state management
-├── types/
-│   └── document.ts                  # DocumentData interface
-├── constants/
-│   └── defaultDocument.ts           # Sample document content
-├── main.tsx                         # React entry point
-└── index.css                        # Tailwind + custom utilities
-
-electron/
-├── main.js                          # Electron main process
-└── preload.js                       # Preload script for IPC
-
-Configuration files:
-├── vite.config.ts                   # Vite configuration
-├── tsconfig.json                    # TypeScript options
-├── tailwind.config.js               # Tailwind theming
-└── package.json                     # Dependencies & scripts
-```
+A scholarly reading assistant for language learning and document analysis. Displays PDFs with original formatting intact, with an AI-powered sidebar for translation, summarization, vocabulary extraction, Q&A, and annotations.
 
 ## Architecture
 
-### Component Hierarchy
-- **App** (state orchestrator)
-  - Header (navigation & search)
-  - Sidebar (AI assistant)
-  - Reader (document display)
-  - ProgressControls (page navigation)
+```
+CRT4M/
+├── electron/
+│   ├── main.js              # Spawns Python backend as child process
+│   └── preload.js
+├── backend/                 # Python FastAPI server
+│   ├── main.py              # All API routes
+│   ├── extractor.py         # PDF parsing via pdfplumber
+│   ├── analyzer.py          # AI features (translate, summarize, vocab, Q&A)
+│   ├── annotations.py       # Local JSON annotation store
+│   ├── config.py            # AI provider + model configuration
+│   └── requirements.txt
+├── src/                     # React frontend
+│   ├── App.tsx
+│   ├── components/
+│   │   ├── Header.tsx
+│   │   ├── Reader.tsx       # Displays PDF via iframe (preserves formatting)
+│   │   ├── Sidebar.tsx      # AI assistant panel
+│   │   ├── ProgressControls.tsx
+│   │   └── common/
+│   │       ├── SidebarTab.tsx
+│   │       └── FloatingButton.tsx
+│   ├── hooks/
+│   │   ├── useDocumentUpload.ts   # POSTs PDF to /api/extract
+│   │   └── useSidebarState.ts
+│   ├── types/
+│   │   └── document.ts
+│   └── constants/
+│       └── defaultDocument.ts
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
 
-### Key Hooks
-- `useDocumentUpload()` — Handles PDF/text file parsing via PDF.js
-- `useSidebarState()` — Manages sidebar open/close and tab selection
-
-### Design System
-- Material Design 3 color palette (primary, secondary, tertiary)
-- Custom Tailwind theme in `index.css`
-- Responsive breakpoints: mobile, tablet, desktop
-
-## Environment Variables (Optional)
-
-Create an `.env.local` file to add optional configurations:
+### How the pieces fit together
 
 ```
-GEMINI_API_KEY=your_gemini_api_key_here
+Upload PDF
+  → React POSTs file to /api/extract
+  → pdfplumber extracts structured text per page
+  → Returns { pages, totalPages, title }
+  → iframe renders the original PDF for display
+
+Select text → click Translate / Summarize / Vocab / Q&A
+  → React POSTs { text, feature } to /api/analyze/*
+  → Configured AI provider processes the request
+  → Result displayed in sidebar
+
+Add annotation
+  → React POSTs { page, note, selected_text } to /api/annotations
+  → Stored in backend/annotations.json
+  → Persists across sessions
 ```
 
-The build process (Vite) makes these available at `process.env.*` at build time.
+## Prerequisites
 
-## Supported File Formats
+- Node.js v18 or later
+- Python 3.11 or later
+- An API key for at least one supported AI provider
 
-- **PDF** — Text extraction via PDF.js library
-- **Plain Text** — Direct import with line-based paragraph splitting
+## Installation
 
-## Development Commands
+### Frontend
+
+```bash
+npm install
+```
+
+### Backend
+
+```bash
+# Create and activate a virtual environment (recommended)
+python -m venv backend/venv
+backend\venv\Scripts\activate   # Windows
+source backend/venv/bin/activate # macOS/Linux
+
+pip install -r backend/requirements.txt
+```
+
+`requirements.txt` includes all four provider SDKs. If you only use one, you can remove the others — they are all optional at install time.
+
+## Configuration
+
+### AI Provider
+
+Set the `AI_PROVIDER` environment variable to one of:
+
+| Value | Provider | Required key |
+|---|---|---|
+| `gemini` | Google Gemini (default) | `GEMINI_API_KEY` |
+| `openai` | OpenAI GPT | `OPENAI_API_KEY` |
+| `anthropic` | Anthropic Claude | `ANTHROPIC_API_KEY` |
+| `openrouter` | OpenRouter (access to all models) | `OPENROUTER_API_KEY` |
+
+### Default models
+
+Edit `backend/config.py` to change the default model for any provider:
+
+```python
+MODELS = {
+    "gemini": "gemini-1.5-flash",
+    "openai": "gpt-4o",
+    "anthropic": "claude-opus-4-6",
+    "openrouter": "anthropic/claude-opus-4",
+}
+```
+
+For OpenRouter, any model slug from [openrouter.ai/models](https://openrouter.ai/models) works. Some useful options:
+
+| Use case | Slug |
+|---|---|
+| Best quality | `anthropic/claude-opus-4` |
+| Fast and cheap | `mistralai/mistral-7b-instruct` |
+| Balanced | `meta-llama/llama-3.1-8b-instruct` |
+| Free tier | `google/gemini-2.0-flash-exp:free` |
+
+## Running the app
+
+### Web (development)
+
+Start the backend and frontend in separate terminals:
+
+```bash
+# Terminal 1 — backend
+cd backend
+AI_PROVIDER=gemini GEMINI_API_KEY=your_key python main.py
+
+# Terminal 2 — frontend
+npm run dev
+```
+
+### Electron (desktop)
+
+```bash
+AI_PROVIDER=gemini GEMINI_API_KEY=your_key npm run electron:dev
+```
+
+Electron spawns the Python backend automatically as a child process.
+
+### Production build
+
+```bash
+# Web
+npm run build
+
+# Desktop (packages Electron app)
+npm run electron:build
+```
+
+## API reference
+
+### Extraction
+
+```
+POST /api/extract
+Content-Type: multipart/form-data
+Body: file (PDF)
+
+→ { title, pages: string[], total_pages }
+```
+
+### AI analysis
+
+All analysis endpoints accept and return JSON.
+
+```
+POST /api/analyze/translate
+{ text, target_language }
+→ { literal, idiomatic, notes: string[] }
+
+POST /api/analyze/summarize
+{ text }
+→ { summary, key_points: string[], themes: string[] }
+
+POST /api/analyze/vocabulary
+{ text }
+→ { words: [{ word, definition, part_of_speech, example }] }
+
+POST /api/analyze/qa
+{ question, context }
+→ { answer, confidence, relevant_quote }
+```
+
+### Annotations
+
+```
+GET    /api/annotations/:document_id
+POST   /api/annotations
+       { document_id, page, note, selected_text }
+DELETE /api/annotations/:document_id/:annotation_id
+```
+
+### Configuration
+
+```
+GET  /api/config
+→ { provider, model, available_providers, available_models }
+
+POST /api/config/provider
+     { provider, model? }
+→ { provider, model }
+```
+
+Switch provider at runtime without restarting:
+
+```bash
+curl -X POST http://localhost:8000/api/config/provider \
+  -H "Content-Type: application/json" \
+  -d '{"provider": "openrouter", "model": "mistralai/mistral-7b-instruct"}'
+```
+
+## Supported file formats
+
+| Format | Extraction | Display |
+|---|---|---|
+| PDF (digital) | pdfplumber | Browser iframe (original formatting) |
+| Plain text (.txt) | Direct read | Paragraph rendering |
+
+Scanned / image-based PDFs are not currently supported.
+
+## Development commands
 
 | Command | Purpose |
-|---------|---------|
-| `npm run dev` | Web development server (Vite) |
-| `npm run electron:dev` | Electron app with hot reload |
-| `npm run build` | Production build (web) |
-| `npm run electron:build` | Build & package Electron app |
-| `npm run preview` | Preview production build |
+|---|---|
+| `npm run dev` | Vite dev server |
+| `npm run electron:dev` | Electron with hot reload |
+| `npm run build` | Production web build |
+| `npm run electron:build` | Package desktop app |
+| `npm run lint` | TypeScript type check |
 
 ## Dependencies
 
-### Core
-- **react** — UI framework
-- **typescript** — Type safety
-- **vite** — Build tool & dev server
-- **tailwindcss** — Utility-first CSS
-- **pdfjs-dist** — PDF text extraction
+### Frontend
+- **React 19** — UI framework
+- **TypeScript** — type safety
+- **Vite** — build tool
+- **Tailwind CSS** — styling
+- **Lucide React** — icons
+- **Motion** — animations
+- **Electron** — desktop runtime
 
-### UI & Animation
-- **lucide-react** — Icon library
-- **motion** (Framer Motion) — Animations
-
-### Desktop
-- **electron** — Desktop app framework
-- **electron-builder** — Package & distribute
-- **concurrently** — Run multiple commands
-- **wait-on** — Wait for dev server startup
-
-## Deployment
-
-### Web
-```bash
-npm run build
-# Deploy `dist/` folder to any static host
-```
-
-### Desktop (macOS, Windows, Linux)
-```bash
-npm run electron:build
-# Outputs packaged apps in `dist/` directory
-```
-
-## Notes
-
-- The app is primarily **client-side** — no backend server required for basic functionality
-- PDF parsing happens entirely in the browser (no server upload needed)
-- Electron support is built-in for native desktop distribution
-- Custom theming can be modified in [src/index.css](src/index.css)
-
-## Future Enhancements
-
-- [ ] Implement AI backend integration (Gemini API)
-- [ ] Add search functionality across documents
-- [ ] Support for more file formats (EPUB, Word docs)
-- [ ] Annotation and highlighting tools
-- [ ] Local storage for saved notes and bookmarks
-- [ ] Dark mode toggle
+### Backend
+- **FastAPI** — API framework
+- **uvicorn** — ASGI server
+- **pdfplumber** — PDF text extraction
+- **google-generativeai** — Gemini SDK
+- **openai** — OpenAI + OpenRouter SDK
+- **anthropic** — Claude SDK
+- **python-multipart** — file upload handling
