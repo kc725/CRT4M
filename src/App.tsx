@@ -68,6 +68,8 @@ export default function App() {
             totalPages={document.totalPages}
             onPageChange={setCurrentPage}
             onFirstPage={() => setCurrentPage(1)}
+            onPreviousPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onNextPage={() => setCurrentPage((p) => Math.min(document.totalPages || 1, p + 1))}
             onLastPage={() => setCurrentPage(document.totalPages)}
           />
         </div>
@@ -75,4 +77,3 @@ export default function App() {
     </div>
   );
 }
-
