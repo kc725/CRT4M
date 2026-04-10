@@ -86,23 +86,22 @@ class QARequest(BaseModel):
 @app.post("/api/analyze/translate")
 async def analyze_translate(req: TranslateRequest):
     result = translate(req.text, req.target_language)
-    return json.loads(result)
+    return result
 
 @app.post("/api/analyze/summarize")
 async def analyze_summarize(req: SummarizeRequest):
     result = summarize(req.text)
-    return json.loads(result)
+    return result
 
 @app.post("/api/analyze/vocabulary")
 async def analyze_vocabulary(req: VocabRequest):
     result = extract_vocabulary(req.text)
-    return json.loads(result)
+    return result
 
 @app.post("/api/analyze/qa")
 async def analyze_qa(req: QARequest):
     result = answer_question(req.question, req.context)
-    return json.loads(result)
-
+    return result
 
 # ── Annotations ───────────────────────────────────────────────────────────────
 

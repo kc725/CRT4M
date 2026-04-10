@@ -91,6 +91,7 @@ def _call_anthropic(prompt: str) -> str:
     end = text.rfind("}") + 1
     return text[start:end]
 
+
 def _call_openrouter(prompt: str) -> str:
     from openai import OpenAI
     client = OpenAI(
@@ -110,6 +111,48 @@ def _call_openrouter(prompt: str) -> str:
     return response.choices[0].message.content
 
 
+def _call_ollama(prompt: str) -> str:
+    """
+    Calls a locally running Ollama server via its OpenAI-compatible /v1 endpoint.
+    Requires Ollama >= 0.1.24 (ships with the /v1 compatibility layer).
+
+    Alternative: use the `ollama` Python package directly:
+        import ollama
+        response = ollama.chat(
+            model=config.get_model(),
+            messages=[{"role": "user", "content": prompt}],
+            format="json",
+        )
+        return response["message"]["content"]
+    The openai-compatible approach below avoids an extra dependency.
+    """
+    from openai import OpenAI
+    client = OpenAI(
+        api_key="ollama",  # Ollama ignores this but the openai client requires a non-empty value
+        base_url=f"{config.OLLAMA_BASE_URL}/v1",
+    )
+    response = client.chat.completions.create(
+        model=config.get_model(),
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Always respond with valid JSON only, no markdown, no explanation.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        # format="json" is not part of the OpenAI spec, so we rely on the
+        # system prompt above. For stricter enforcement, use the ollama package
+        # with format="json" as shown in the docstring above.
+    )
+    text = response.choices[0].message.content
+    # Extract JSON robustly in case the model adds surrounding text anyway
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if start == -1 or end == 0:
+        raise ValueError(f"Ollama response did not contain valid JSON:\n{text}")
+    return text[start:end]
+
+
 # ── Dispatcher ────────────────────────────────────────────────────────────────
 
 def _call(prompt: str) -> str:
@@ -118,6 +161,7 @@ def _call(prompt: str) -> str:
         "openai": _call_openai,
         "anthropic": _call_anthropic,
         "openrouter": _call_openrouter,
+        "ollama": _call_ollama,
     }
     if config.PROVIDER not in providers:
         raise ValueError(
