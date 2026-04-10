@@ -1,8 +1,24 @@
+export interface PageTextSpan {
+  text: string;
+  leftPct: number;
+  topPct: number;
+  widthPct: number;
+  heightPct: number;
+  fontSizePct: number;
+}
+
+export interface PdfPageOverlay {
+  width: number;
+  height: number;
+  spans: PageTextSpan[];
+}
+
 export interface DocumentData {
   title: string;
   content: string[];
   totalPages: number;
-  isPDF?: boolean; // Optional flag to indicate if the document is a PDF
+  isPdf?: boolean;
+  pageOverlays?: PdfPageOverlay[];
 }
 
 export interface TranslationResult {

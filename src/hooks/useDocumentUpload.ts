@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import * as pdfjs from 'pdfjs-dist';
 import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { DocumentData } from '../types/document';
+import { DocumentData, PdfPageOverlay } from '../types/document';
 
 // Set up PDF.js worker - use bundled worker
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
@@ -26,9 +26,10 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
         const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
         const numPages = pdf.numPages;
         const pageImages: string[] = [];
+        const pageOverlays: PdfPageOverlay[] = [];
 
         // Extract pages from PDF
-         for (let i = 1; i <= numPages; i++) {
+        for (let i = 1; i <= numPages; i++) {
           const page = await pdf.getPage(i);
           const viewport = page.getViewport({ scale: 1.5 }); // scale up for sharpness
 
@@ -40,13 +41,43 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
           await page.render({ canvasContext: ctx, viewport }).promise;
 
           pageImages.push(canvas.toDataURL('image/png'));
-         }
+
+          const textContent = await page.getTextContent();
+          const spans = textContent.items
+            .map((item) => {
+              if (!('str' in item) || !item.str.trim()) return null;
+
+              const textMatrix = pdfjs.Util.transform(viewport.transform, item.transform);
+              const fontSize = Math.hypot(textMatrix[2], textMatrix[3]);
+              const x = textMatrix[4];
+              const y = textMatrix[5] - fontSize;
+              const width = item.width * viewport.scale;
+              const height = fontSize;
+
+              return {
+                text: item.str,
+                leftPct: (x / viewport.width) * 100,
+                topPct: (y / viewport.height) * 100,
+                widthPct: (width / viewport.width) * 100,
+                heightPct: (height / viewport.height) * 100,
+                fontSizePct: (fontSize / viewport.height) * 100,
+              };
+            })
+            .filter((item): item is PdfPageOverlay['spans'][number] => item !== null);
+
+          pageOverlays.push({
+            width: viewport.width,
+            height: viewport.height,
+            spans,
+          });
+        }
 
         onDocumentLoad({
           title: file.name.replace('.pdf', ''),
           content: pageImages,
           totalPages: numPages,
           isPdf: true,
+          pageOverlays,
         });
         onPageReset();
       } else if (file.type === 'text/plain') {
