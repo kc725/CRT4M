@@ -17,40 +17,6 @@ interface ReaderProps {
 export function Reader({ document, currentPage, onTextSelect }: ReaderProps) {
   const pageContent = document.content[currentPage - 1] ?? '';
   const currentOverlay = document.pageOverlays?.[currentPage - 1];
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const [highlightRects, setHighlightRects] = useState<HighlightRect[]>([]);
-
-  const clearSelection = useCallback(() => {
-    window.getSelection()?.removeAllRanges();
-    setHighlightRects([]);
-  }, []);
-
-  const updateSelectionHighlight = useCallback(() => {
-    const selection = window.getSelection();
-    const overlayBounds = overlayRef.current?.getBoundingClientRect();
-
-    if (!selection || selection.rangeCount === 0 || !overlayBounds) {
-      setHighlightRects([]);
-      return;
-    }
-
-    const range = selection.getRangeAt(0);
-    const rects = Array.from(range.getClientRects())
-      .map((rect) => {
-        const left = rect.left - overlayBounds.left;
-        const top = rect.top - overlayBounds.top;
-
-        return {
-          leftPct: (left / overlayBounds.width) * 100,
-          topPct: (top / overlayBounds.height) * 100,
-          widthPct: (rect.width / overlayBounds.width) * 100,
-          heightPct: (rect.height / overlayBounds.height) * 100,
-        };
-      })
-      .filter((rect) => rect.widthPct > 0 && rect.heightPct > 0);
-
-    setHighlightRects(rects);
-  }, []);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -118,6 +84,7 @@ export function Reader({ document, currentPage, onTextSelect }: ReaderProps) {
                     />
                   ))}
 
+                <div className="absolute inset-0 select-text">
                   {currentOverlay.spans.map((span, idx) => (
                     <span
                       // eslint-disable-next-line react/no-array-index-key
@@ -139,16 +106,6 @@ export function Reader({ document, currentPage, onTextSelect }: ReaderProps) {
                     </span>
                   ))}
                 </div>
-              )}
-
-              {highlightRects.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearSelection}
-                  className="absolute top-3 right-3 bg-surface/90 border border-outline-variant/30 px-3 py-1 text-xs rounded-md shadow-sm hover:bg-surface"
-                >
-                  Clear selection
-                </button>
               )}
             </div>
           ) : (
