@@ -1,255 +1,165 @@
 # CRT4M Reader
 
-A scholarly reading assistant for language learning and document analysis. Displays PDFs with original formatting intact, with an AI-powered sidebar for translation, summarization, vocabulary extraction, Q&A, and annotations.
+CRT4M is a reading assistant with:
 
-## Architecture
+- A **React + Vite + Electron** frontend for reading PDF/TXT documents.
+- A **FastAPI** backend for AI analysis (translation, summary, vocabulary, Q&A) and annotations.
+
+## Current Architecture
 
 ```
 CRT4M/
-├── electron/
-│   ├── main.js              # Spawns Python backend as child process
-│   └── preload.js
-├── backend/                 # Python FastAPI server
-│   ├── main.py              # All API routes
-│   ├── extractor.py         # PDF parsing via pdfplumber
-│   ├── analyzer.py          # AI features (translate, summarize, vocab, Q&A)
-│   ├── annotations.py       # Local JSON annotation store
-│   ├── config.py            # AI provider + model configuration
+├── backend/
+│   ├── main.py             # FastAPI routes
+│   ├── analyzer.py         # Provider dispatch + prompt templates
+│   ├── extractor.py        # PDF text extraction (API endpoint)
+│   ├── annotations.py      # Local JSON annotation persistence
+│   ├── config.py           # Provider/model/env configuration
 │   └── requirements.txt
-├── src/                     # React frontend
+├── src/
 │   ├── App.tsx
 │   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── Reader.tsx       # Displays PDF via iframe (preserves formatting)
-│   │   ├── Sidebar.tsx      # AI assistant panel
-│   │   ├── ProgressControls.tsx
-│   │   └── common/
-│   │       ├── SidebarTab.tsx
-│   │       └── FloatingButton.tsx
 │   ├── hooks/
-│   │   ├── useDocumentUpload.ts   # POSTs PDF to /api/extract
-│   │   └── useSidebarState.ts
-│   ├── types/
-│   │   └── document.ts
-│   └── constants/
-│       └── defaultDocument.ts
-├── vite.config.ts
-├── tsconfig.json
+│   │   ├── useDocumentUpload.ts   # Local PDF/TXT import and parsing (frontend)
+│   │   └── useAnalysis.ts         # Calls backend /api/analyze/*
+│   ├── constants/api.ts
+│   └── types/
+├── electron/
+│   ├── main.js
+│   └── preload.js
+├── scripts/
+│   └── test_backend_and_app.sh    # End-to-end smoke checks
 └── package.json
 ```
 
-### How the pieces fit together
+## Important Notes
 
-```
-Upload PDF
-  → React POSTs file to /api/extract
-  → pdfplumber extracts structured text per page
-  → Returns { pages, totalPages, title }
-  → iframe renders the original PDF for display
-
-Select text → click Translate / Summarize / Vocab / Q&A
-  → React POSTs { text, feature } to /api/analyze/*
-  → Configured AI provider processes the request
-  → Result displayed in sidebar
-
-Add annotation
-  → React POSTs { page, note, selected_text } to /api/annotations
-  → Stored in backend/annotations.json
-  → Persists across sessions
-```
+- The frontend currently imports PDFs **locally in the browser** using `pdfjs-dist` and renders page images.
+- AI features call the backend at `http://localhost:8000` (see `src/constants/api.ts`).
+- Backend CORS currently allows frontend origins on ports **3000** and **5173**.
 
 ## Prerequisites
 
-- Node.js v18 or later
-- Python 3.11 or later
-- An API key for at least one supported AI provider
+- Node.js 18+
+- Python 3.11+
+- npm
 
-## Installation
+For AI endpoints, set at least one provider API key.
 
-### Frontend
+## Setup
+
+### 1) Frontend deps
 
 ```bash
 npm install
 ```
 
-### Backend
+### 2) Backend virtualenv + deps
 
 ```bash
-# Create and activate a virtual environment (recommended)
-python -m venv backend/venv
-backend\venv\Scripts\activate   # Windows
-source backend/venv/bin/activate # macOS/Linux
-
+python3 -m venv backend/venv
+source backend/venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-`requirements.txt` includes all four provider SDKs. If you only use one, you can remove the others — they are all optional at install time.
-
 ## Configuration
 
-### AI Provider
+Backend provider selection is environment-driven in `backend/config.py`.
 
-Set the `AI_PROVIDER` environment variable to one of:
+Supported providers:
 
-| Value | Provider | Required key |
-|---|---|---|
-| `gemini` | Google Gemini (default) | `GEMINI_API_KEY` |
-| `openai` | OpenAI GPT | `OPENAI_API_KEY` |
-| `anthropic` | Anthropic Claude | `ANTHROPIC_API_KEY` |
-| `openrouter` | OpenRouter (access to all models) | `OPENROUTER_API_KEY` |
+- `gemini` (`GEMINI_API_KEY`)
+- `openai` (`OPENAI_API_KEY`)
+- `anthropic` (`ANTHROPIC_API_KEY`)
+- `openrouter` (`OPENROUTER_API_KEY`)
+- `ollama` (no API key required)
 
-### Default models
-
-Edit `backend/config.py` to change the default model for any provider:
-
-```python
-MODELS = {
-    "gemini": "gemini-1.5-flash",
-    "openai": "gpt-4o",
-    "anthropic": "claude-opus-4-6",
-    "openrouter": "anthropic/claude-opus-4",
-}
-```
-
-For OpenRouter, any model slug from [openrouter.ai/models](https://openrouter.ai/models) works. Some useful options:
-
-| Use case | Slug |
-|---|---|
-| Best quality | `anthropic/claude-opus-4` |
-| Fast and cheap | `mistralai/mistral-7b-instruct` |
-| Balanced | `meta-llama/llama-3.1-8b-instruct` |
-| Free tier | `google/gemini-2.0-flash-exp:free` |
-
-## Running the app
-
-### Web (development)
-
-Start the backend and frontend in separate terminals:
+Example:
 
 ```bash
-# Terminal 1 — backend
-cd backend
-AI_PROVIDER=gemini GEMINI_API_KEY=your_key python main.py
+export AI_PROVIDER=gemini
+export GEMINI_API_KEY=your_key_here
+```
 
-# Terminal 2 — frontend
+## Run Locally
+
+### Backend (Terminal 1)
+
+```bash
+cd backend
+python main.py
+```
+
+Backend runs at `http://127.0.0.1:8000`.
+
+### Frontend Web (Terminal 2)
+
+```bash
 npm run dev
 ```
 
-### Electron (desktop)
+Frontend runs at `http://localhost:3000`.
+
+### Electron (optional)
 
 ```bash
-AI_PROVIDER=gemini GEMINI_API_KEY=your_key npm run electron:dev
+npm run electron:dev
 ```
 
-Electron spawns the Python backend automatically as a child process.
+## API Surface
 
-### Production build
+### Config
 
-```bash
-# Web
-npm run build
+- `GET /api/config`
+- `POST /api/config/provider`
 
-# Desktop (packages Electron app)
-npm run electron:build
-```
+### AI Analysis
 
-## API reference
-
-### Extraction
-
-```
-POST /api/extract
-Content-Type: multipart/form-data
-Body: file (PDF)
-
-→ { title, pages: string[], total_pages }
-```
-
-### AI analysis
-
-All analysis endpoints accept and return JSON.
-
-```
-POST /api/analyze/translate
-{ text, target_language }
-→ { literal, idiomatic, notes: string[] }
-
-POST /api/analyze/summarize
-{ text }
-→ { summary, key_points: string[], themes: string[] }
-
-POST /api/analyze/vocabulary
-{ text }
-→ { words: [{ word, definition, part_of_speech, example }] }
-
-POST /api/analyze/qa
-{ question, context }
-→ { answer, confidence, relevant_quote }
-```
+- `POST /api/analyze/translate`
+- `POST /api/analyze/summarize`
+- `POST /api/analyze/vocabulary`
+- `POST /api/analyze/qa`
 
 ### Annotations
 
-```
-GET    /api/annotations/:document_id
-POST   /api/annotations
-       { document_id, page, note, selected_text }
-DELETE /api/annotations/:document_id/:annotation_id
-```
+- `GET /api/annotations/{document_id}`
+- `POST /api/annotations`
+- `DELETE /api/annotations/{document_id}/{annotation_id}`
 
-### Configuration
+### Extraction
 
-```
-GET  /api/config
-→ { provider, model, available_providers, available_models }
+- `POST /api/extract` (PDF upload)
 
-POST /api/config/provider
-     { provider, model? }
-→ { provider, model }
-```
+> Note: this endpoint is available in backend, but the current frontend import flow is local and does not call it.
 
-Switch provider at runtime without restarting:
+## Testing
+
+### Fast smoke test for backend + app
 
 ```bash
-curl -X POST http://localhost:8000/api/config/provider \
-  -H "Content-Type: application/json" \
-  -d '{"provider": "openrouter", "model": "mistralai/mistral-7b-instruct"}'
+./scripts/test_backend_and_app.sh
 ```
 
-## Supported file formats
+What this script does:
 
-| Format | Extraction | Display |
-|---|---|---|
-| PDF (digital) | pdfplumber | Browser iframe (original formatting) |
-| Plain text (.txt) | Direct read | Paragraph rendering |
+1. Creates backend venv if missing.
+2. Installs backend requirements.
+3. Starts backend and waits for readiness.
+4. Smoke-tests backend config + annotation create/read/delete.
+5. Runs frontend type-check and production build.
 
-Scanned / image-based PDFs are not currently supported.
+### Optional AI endpoint smoke tests
 
-## Development commands
+If your API keys/provider are configured:
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Vite dev server |
-| `npm run electron:dev` | Electron with hot reload |
-| `npm run build` | Production web build |
-| `npm run electron:build` | Package desktop app |
-| `npm run lint` | TypeScript type check |
+```bash
+RUN_AI_TESTS=1 ./scripts/test_backend_and_app.sh
+```
 
-## Dependencies
+## Package Scripts
 
-### Frontend
-- **React 19** — UI framework
-- **TypeScript** — type safety
-- **Vite** — build tool
-- **Tailwind CSS** — styling
-- **Lucide React** — icons
-- **Motion** — animations
-- **Electron** — desktop runtime
-
-### Backend
-- **FastAPI** — API framework
-- **uvicorn** — ASGI server
-- **pdfplumber** — PDF text extraction
-- **google-generativeai** — Gemini SDK
-- **openai** — OpenAI + OpenRouter SDK
-- **anthropic** — Claude SDK
-- **python-multipart** — file upload handling
+- `npm run dev` — start Vite dev server
+- `npm run lint` — TypeScript type-check
+- `npm run build` — production frontend build
+- `npm run electron:dev` — run Electron against local dev server
+- `npm run electron:build` — package Electron app
