@@ -4,10 +4,19 @@ import { DocumentData } from '../types/document';
 interface ReaderProps {
   document: DocumentData;
   currentPage: number;
+  onTextSelect: (text: string) => void;
 }
 
-export function Reader({ document, currentPage }: ReaderProps) {
-  const pageContent = document.content[currentPage - 1];
+export function Reader({ document, currentPage, onTextSelect }: ReaderProps) {
+  const pageContent = document.content[currentPage - 1] ?? '';
+
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    if(text) {
+      onTextSelect(text);
+    }
+  };
 
   return (
     <article className="bg-surface p-6 md:p-8 lg:p-12 reading-canvas relative">

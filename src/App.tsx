@@ -21,6 +21,14 @@ export default function App() {
     () => setCurrentPage(1)
   );
 
+  // When text is selected, open the sidebar
+  const handleTextSelection = (text: string) => {
+    setSelectedText(text);
+    if(!isSidebarOpen) {
+      setIsSidebarOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
       <input 
@@ -42,6 +50,7 @@ export default function App() {
         isSidebarOpen={isSidebarOpen}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
+        selectedText={selectedText}
       />
 
       <main className={`pt-16 md:pt-32 pb-16 md:pb-24 transition-all duration-300 ${isSidebarOpen ? 'mr-80' : 'mr-0'} flex justify-center min-h-screen`}>
