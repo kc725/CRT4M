@@ -56,7 +56,6 @@ export default function App() {
 
       <main className={`pt-16 md:pt-32 pb-16 md:pb-24 transition-all duration-300 ${isSidebarOpen ? 'mr-80' : 'mr-0'} flex justify-center min-h-screen`}>
         <div className="w-full px-4 md:px-8 lg:px-12 flex flex-col justify-center">
-          <Reader document={document} currentPage={currentPage} />
           <Reader
             document={document}
             currentPage={currentPage}
@@ -75,4 +74,3 @@ export default function App() {
     </div>
   );
 }
-
