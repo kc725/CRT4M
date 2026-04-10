@@ -12,6 +12,9 @@ MODELS = {
     # Any model you have pulled locally via `ollama pull <model>`
     "ollama": "gemma4:e4b",
 }
+# Runtime-only model overrides set via the API.
+# These should not mutate MODELS, which represent provider defaults.
+RUNTIME_MODEL_OVERRIDES: dict[str, str] = {}
 
 API_KEYS = {
     "gemini": os.environ.get("GEMINI_API_KEY"),
@@ -30,7 +33,7 @@ OPENROUTER_APP_URL = os.environ.get("OPENROUTER_APP_URL", "http://localhost:3000
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 
 def get_model() -> str:
-    return MODELS[PROVIDER]
+    return RUNTIME_MODEL_OVERRIDES.get(PROVIDER, MODELS[PROVIDER])
 
 def get_api_key() -> str:
     key = API_KEYS[PROVIDER]

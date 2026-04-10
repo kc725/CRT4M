@@ -28,8 +28,11 @@ async def get_config():
     return {
         "provider": cfg.PROVIDER,
         "model": cfg.get_model(),
+        "default_model": cfg.MODELS[cfg.PROVIDER],
+        "active_model": cfg.get_model(),
         "available_providers": list(cfg.MODELS.keys()),
         "available_models": cfg.MODELS,
+        "runtime_model_overrides": cfg.RUNTIME_MODEL_OVERRIDES,
     }
 
 class ProviderRequest(BaseModel):
@@ -44,10 +47,17 @@ async def set_provider(req: ProviderRequest):
             detail=f"Unknown provider. Choose from: {list(cfg.MODELS.keys())}"
         )
     cfg.PROVIDER = req.provider
-    # Allow overriding the model slug e.g. switching to a cheaper OpenRouter model
+    # Set/clear runtime model overrides without mutating MODELS defaults.
     if req.model:
-        cfg.MODELS[req.provider] = req.model
-    return {"provider": cfg.PROVIDER, "model": cfg.get_model()}
+        cfg.RUNTIME_MODEL_OVERRIDES[req.provider] = req.model
+    else:
+        cfg.RUNTIME_MODEL_OVERRIDES.pop(req.provider, None)
+    return {
+        "provider": cfg.PROVIDER,
+        "default_model": cfg.MODELS[cfg.PROVIDER],
+        "active_model": cfg.get_model(),
+    }
+
 
 # ── Extraction ────────────────────────────────────────────────────────────────
 

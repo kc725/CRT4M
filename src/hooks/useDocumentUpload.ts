@@ -46,7 +46,7 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
           title: file.name.replace('.pdf', ''),
           content: pageImages,
           totalPages: numPages,
-          isPDF: true,
+          isPdf: true,
         });
         onPageReset();
       } else if (file.type === 'text/plain') {
@@ -56,7 +56,7 @@ export function useDocumentUpload(onDocumentLoad: (doc: DocumentData) => void, o
           title: file.name,
           content: paragraphs,
           totalPages: 1,
-          isPDF: false,
+          isPdf: false,
         });
         onPageReset();
       }

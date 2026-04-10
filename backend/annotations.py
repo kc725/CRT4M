@@ -1,4 +1,5 @@
 import json
+import uuid
 from pathlib import Path
 
 ANNOTATIONS_FILE = Path("backend/annotations.json")
@@ -26,7 +27,7 @@ def add_annotation(document_id: str, page: int, note: str, selected_text: str) -
         data[document_id] = []
 
     annotation = {
-        "id": f"{document_id}-{len(data[document_id])}",
+        "id": str(uuid.uuid4()),
         "page": page,
         "note": note,
         "selected_text": selected_text,
