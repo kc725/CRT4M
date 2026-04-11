@@ -83,6 +83,20 @@ export GEMINI_API_KEY=your_key_here
 
 ## Run Locally
 
+### One-command startup
+
+```bash
+npm run dev:full
+```
+
+This starts both the backend and the Vite frontend together.
+
+If you want the Electron app too:
+
+```bash
+npm run electron:full
+```
+
 ### Backend (Terminal 1)
 
 ```bash
@@ -158,8 +172,11 @@ RUN_AI_TESTS=1 ./scripts/test_backend_and_app.sh
 
 ## Package Scripts
 
+- `npm run backend:dev` — start the FastAPI backend
 - `npm run dev` — start Vite dev server
+- `npm run dev:full` — start backend + Vite together
 - `npm run lint` — TypeScript type-check
 - `npm run build` — production frontend build
 - `npm run electron:dev` — run Electron against local dev server
+- `npm run electron:full` — run backend + Vite + Electron together
 - `npm run electron:build` — package Electron app
