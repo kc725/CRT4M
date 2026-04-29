@@ -1,12 +1,14 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useRef, useState } from 'react';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
-import { Reader, ReaderHandle } from './components/Reader';
 import { ProgressControls } from './components/ProgressControls';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
 import { DocumentData } from './types/document';
+import type { ReaderHandle } from './components/Reader';
+
+const Reader = React.lazy(() => import('./components/Reader').then(m => ({ default: m.Reader })));
+const Sidebar = React.lazy(() => import('./components/Sidebar').then(m => ({ default: m.Sidebar })));
 
 // Import react-pdf layer styles here so they're loaded once globally.
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -53,12 +55,14 @@ export default function App() {
       />
 
       <ErrorBoundary>
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-          selectedText={selectedText}
-        />
+        <Suspense>
+          <Sidebar
+            isSidebarOpen={isSidebarOpen}
+            selectedTab={selectedTab}
+            onTabChange={setSelectedTab}
+            selectedText={selectedText}
+          />
+        </Suspense>
       </ErrorBoundary>
 
       <main
@@ -74,12 +78,14 @@ export default function App() {
             </div>
           )}
           <ErrorBoundary>
-            <Reader
-              ref={readerRef}
-              document={document}
-              currentPage={currentPage}
-              onTextSelect={handleTextSelection}
-            />
+            <Suspense>
+              <Reader
+                ref={readerRef}
+                document={document}
+                currentPage={currentPage}
+                onTextSelect={handleTextSelection}
+              />
+            </Suspense>
           </ErrorBoundary>
 
           <ProgressControls
