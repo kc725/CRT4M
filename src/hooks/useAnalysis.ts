@@ -47,7 +47,7 @@ export function useAnalysis() {
         });
         setTranslation({ data, status: 'success', error: null });
       } catch (e) {
-        setTranslation({ data: null, status: 'error', error: (e as Error).message });
+        setTranslation({ data: null, status: 'error', error: e instanceof Error ? e.message : String(e) });
       }
     } else if (tab === 'notes') {
       setSummary({ data: null, status: 'loading', error: null });
@@ -55,7 +55,7 @@ export function useAnalysis() {
         const data = await post<SummaryResult>('/api/analyze/summarize', { text });
         setSummary({ data, status: 'success', error: null });
       } catch (e) {
-        setSummary({ data: null, status: 'error', error: (e as Error).message });
+        setSummary({ data: null, status: 'error', error: e instanceof Error ? e.message : String(e) });
       }
     } else if (tab === 'vocab') {
       setVocab({ data: null, status: 'loading', error: null });
@@ -63,7 +63,7 @@ export function useAnalysis() {
         const data = await post<VocabResult>('/api/analyze/vocabulary', { text });
         setVocab({ data, status: 'success', error: null });
       } catch (e) {
-        setVocab({ data: null, status: 'error', error: (e as Error).message });
+        setVocab({ data: null, status: 'error', error: e instanceof Error ? e.message : String(e) });
       }
     }
   };

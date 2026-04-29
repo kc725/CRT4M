@@ -6,7 +6,7 @@ PROVIDER = os.environ.get("AI_PROVIDER", "gemini")
 MODELS = {
     "gemini": "gemini-1.5-flash",
     "openai": "gpt-4o",
-    "anthropic": "claude-opus-4-6",
+    "anthropic": "claude-sonnet-4-6-20250514",
     # Any model slug from openrouter.ai/models works here
     "openrouter": "anthropic/claude-opus-4",
     # Any model you have pulled locally via `ollama pull <model>`

@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Reader, ReaderHandle } from './components/Reader';
 import { ProgressControls } from './components/ProgressControls';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
 import { DocumentData } from './types/document';
@@ -24,15 +25,15 @@ export default function App() {
   const readerRef = useRef<ReaderHandle>(null);
 
   const { isSidebarOpen, setIsSidebarOpen, selectedTab, setSelectedTab } = useSidebarState();
-  const { fileInputRef, isUploading, handleImportClick, handleFileUpload } = useDocumentUpload(
+  const { fileInputRef, isUploading, uploadError, clearUploadError, handleImportClick, handleFileUpload } = useDocumentUpload(
     setDocument,
     () => setCurrentPage(1),
   );
 
-  const handleTextSelection = (text: string) => {
+  const handleTextSelection = useCallback((text: string) => {
     setSelectedText(text);
-    if (!isSidebarOpen) setIsSidebarOpen(true);
-  };
+    setIsSidebarOpen(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
@@ -51,12 +52,14 @@ export default function App() {
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-        selectedText={selectedText}
-      />
+      <ErrorBoundary>
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          selectedText={selectedText}
+        />
+      </ErrorBoundary>
 
       <main
         className={`pt-16 md:pt-32 pb-16 md:pb-24 transition-all duration-300 ${
@@ -64,12 +67,20 @@ export default function App() {
         } flex justify-center min-h-screen`}
       >
         <div className="w-full px-4 md:px-8 lg:px-12 flex flex-col justify-center">
-          <Reader
-            ref={readerRef}
-            document={document}
-            currentPage={currentPage}
-            onTextSelect={handleTextSelection}
-          />
+          {uploadError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+              <span className="text-sm text-red-600 font-body">{uploadError}</span>
+              <button onClick={clearUploadError} className="text-red-400 hover:text-red-600 text-xs cursor-pointer">Dismiss</button>
+            </div>
+          )}
+          <ErrorBoundary>
+            <Reader
+              ref={readerRef}
+              document={document}
+              currentPage={currentPage}
+              onTextSelect={handleTextSelection}
+            />
+          </ErrorBoundary>
 
           <ProgressControls
             currentPage={currentPage}

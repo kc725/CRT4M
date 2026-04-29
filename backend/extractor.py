@@ -1,3 +1,5 @@
+from typing import BinaryIO
+
 import pdfplumber
 from dataclasses import dataclass
 
@@ -9,7 +11,7 @@ class ExtractedDocument:
     total_pages: int
 
 
-def extract_pdf(file_bytes: bytes, filename: str) -> ExtractedDocument:
+def extract_pdf(file_bytes: BinaryIO, filename: str) -> ExtractedDocument:
     pages = []
 
     with pdfplumber.open(file_bytes) as pdf:

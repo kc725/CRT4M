@@ -1,20 +1,3 @@
-// ── Overlay types (kept for potential future use / text-layer extensions) ────
-
-export interface PageTextSpan {
-  text: string;
-  leftPct: number;
-  topPct: number;
-  widthPct: number;
-  heightPct: number;
-  fontSizePct: number;
-}
-
-export interface PdfPageOverlay {
-  width: number;
-  height: number;
-  spans: PageTextSpan[];
-}
-
 // ── Core document model ───────────────────────────────────────────────────────
 
 export interface DocumentData {

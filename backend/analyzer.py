@@ -85,10 +85,11 @@ def _call_anthropic(prompt: str) -> str:
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
     )
-    # Claude doesn't have a native JSON mode — we extract it from the response
     text = response.content[0].text
     start = text.find("{")
     end = text.rfind("}") + 1
+    if start == -1 or end == 0:
+        raise ValueError(f"Anthropic response did not contain valid JSON:\n{text}")
     return text[start:end]
 
 
@@ -173,14 +174,20 @@ def _call(prompt: str) -> str:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+def _parse_response(raw: str) -> dict:
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {"error": f"AI returned invalid JSON: {raw[:200]}"}
+
 def translate(text: str, target_language: str) -> dict:
-    return json.loads(_call(_translate_prompt(text, target_language)))
+    return _parse_response(_call(_translate_prompt(text, target_language)))
 
 def summarize(text: str) -> dict:
-    return json.loads(_call(_summarize_prompt(text)))
+    return _parse_response(_call(_summarize_prompt(text)))
 
 def extract_vocabulary(text: str) -> dict:
-    return json.loads(_call(_vocabulary_prompt(text)))
+    return _parse_response(_call(_vocabulary_prompt(text)))
 
 def answer_question(question: str, context: str) -> dict:
-    return json.loads(_call(_qa_prompt(question, context)))
+    return _parse_response(_call(_qa_prompt(question, context)))

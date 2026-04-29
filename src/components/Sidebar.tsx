@@ -97,7 +97,7 @@ export function Sidebar({
       </div>
 
       {/* Tab nav */}
-      <nav className="flex flex-col gap-2 mb-6 px-0">
+      <nav aria-label="Analysis tabs" className="flex flex-col gap-2 mb-6 px-0">
         <SidebarTab
           icon={<Languages size={18} />}
           label="Translation"
@@ -152,17 +152,17 @@ export function Sidebar({
                 <div className="space-y-4">
                   <section className="p-4 bg-surface rounded-xl border border-outline-variant/20 shadow-sm space-y-3">
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest font-headline text-primary mb-1 block">
+                      <span className="text-[10px] uppercase tracking-widest font-headline text-primary mb-1 block">
                         Literal
-                      </label>
+                      </span>
                       <p className="text-base font-body text-on-surface">
                         {translation.data.literal}
                       </p>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest font-headline text-primary mb-1 block">
+                      <span className="text-[10px] uppercase tracking-widest font-headline text-primary mb-1 block">
                         Idiomatic
-                      </label>
+                      </span>
                       <p className="text-base font-body text-on-surface font-semibold">
                         {translation.data.idiomatic}
                       </p>
@@ -171,11 +171,11 @@ export function Sidebar({
 
                   {translation.data.notes.length > 0 && (
                     <section className="space-y-3">
-                      <label className="text-[10px] uppercase tracking-widest font-headline text-outline block">
+                      <span className="text-[10px] uppercase tracking-widest font-headline text-outline block">
                         Grammar Notes
-                      </label>
+                      </span>
                       {translation.data.notes.map((note, i) => (
-                        <div key={i} className="flex gap-3 items-start">
+                        <div key={note} className="flex gap-3 items-start">
                           <span className="text-xs font-bold font-headline text-primary/40 mt-0.5">
                             {String(i + 1).padStart(2, '0')}
                           </span>
@@ -218,9 +218,9 @@ export function Sidebar({
               {summary.status === 'success' && summary.data && (
                 <div className="space-y-4">
                   <section className="p-4 bg-surface rounded-xl border border-outline-variant/20 shadow-sm">
-                    <label className="text-[10px] uppercase tracking-widest font-headline text-primary mb-2 block">
+                    <span className="text-[10px] uppercase tracking-widest font-headline text-primary mb-2 block">
                       Summary
-                    </label>
+                    </span>
                     <p className="text-sm font-body leading-relaxed text-on-surface">
                       {summary.data.summary}
                     </p>
@@ -228,11 +228,11 @@ export function Sidebar({
 
                   {summary.data.key_points.length > 0 && (
                     <section className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest font-headline text-outline block">
+                      <span className="text-[10px] uppercase tracking-widest font-headline text-outline block">
                         Key Points
-                      </label>
+                      </span>
                       {summary.data.key_points.map((point, i) => (
-                        <div key={i} className="flex gap-3 items-start">
+                        <div key={point} className="flex gap-3 items-start">
                           <span className="text-xs font-bold font-headline text-primary/40 mt-0.5">
                             {String(i + 1).padStart(2, '0')}
                           </span>
@@ -244,13 +244,13 @@ export function Sidebar({
 
                   {summary.data.themes.length > 0 && (
                     <section>
-                      <label className="text-[10px] uppercase tracking-widest font-headline text-outline mb-2 block">
+                      <span className="text-[10px] uppercase tracking-widest font-headline text-outline mb-2 block">
                         Themes
-                      </label>
+                      </span>
                       <div className="flex flex-wrap gap-2">
                         {summary.data.themes.map((theme, i) => (
                           <span
-                            key={i}
+                            key={theme}
                             className="px-3 py-1 bg-primary-container/60 text-on-primary-container text-xs font-headline font-bold rounded-full"
                           >
                             {theme}
@@ -294,7 +294,7 @@ export function Sidebar({
                 <div className="space-y-3">
                   {vocab.data.words.map((w, i) => (
                     <div
-                      key={i}
+                      key={w.word}
                       className="p-3 bg-surface rounded-xl border border-outline-variant/20 shadow-sm space-y-1"
                     >
                       <div className="flex items-baseline justify-between gap-2">

@@ -12,7 +12,7 @@
  * For plain-text documents the sandwich is skipped and paragraphs are rendered directly.
  */
 
-import React, { useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 
@@ -37,8 +37,6 @@ interface ReaderProps {
   document: DocumentData;
   currentPage: number;
   onTextSelect: (text: string) => void;
-  /** Width in px the PDF pages will be rendered at. Defaults to container width. */
-  pageWidth?: number;
 }
 
 /** Exposed handle so parent components can imperatively scroll to a page. */
@@ -52,11 +50,23 @@ const PAGE_GAP = 24;
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const Reader = forwardRef<ReaderHandle, ReaderProps>(function Reader(
-  { document: doc, currentPage, onTextSelect, pageWidth },
+  { document: doc, currentPage, onTextSelect },
   ref,
 ) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Expose scrollToPage so ProgressControls can jump to any page.
   useImperativeHandle(ref, () => ({
@@ -166,7 +176,7 @@ export const Reader = forwardRef<ReaderHandle, ReaderProps>(function Reader(
           totalCount={doc.totalPages}
           overscan={1}             // render 1 extra page above/below the viewport
           itemContent={(index) => (
-            <PageWrapper index={index} pageWidth={pageWidth} />
+            <PageWrapper index={index} pageWidth={containerWidth} />
           )}
           style={{ width: '100%' }}
         />
@@ -208,14 +218,22 @@ function PageWrapper({ index, pageWidth }: PageWrapperProps) {
           // renderAnnotationLayer enables clickable links, form fields, etc.
           renderAnnotationLayer
           loading={
-            <div
-              className="flex items-center justify-center bg-surface-variant/30"
-              style={{ width: pageWidth ?? 600, height: (pageWidth ?? 600) * 1.414 }}
-            >
-              <span className="text-[10px] font-headline uppercase tracking-widest text-outline/40 animate-pulse">
-                p.{pageNumber}
-              </span>
-            </div>
+            pageWidth ? (
+              <div
+                className="flex items-center justify-center bg-surface-variant/30"
+                style={{ width: pageWidth, height: pageWidth * 1.414 }}
+              >
+                <span className="text-[10px] font-headline uppercase tracking-widest text-outline/40 animate-pulse">
+                  p.{pageNumber}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center bg-surface-variant/30 w-full aspect-[1/1.414]">
+                <span className="text-[10px] font-headline uppercase tracking-widest text-outline/40 animate-pulse">
+                  p.{pageNumber}
+                </span>
+              </div>
+            )
           }
           error={
             <div className="flex items-center justify-center p-8 text-red-300">

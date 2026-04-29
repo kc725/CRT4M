@@ -11,10 +11,13 @@ from annotations import add_annotation, delete_annotation, get_annotations
 
 app = FastAPI(title="CRT4M Backend")
 
-# Allow the React dev server and Electron to reach the API
+_default_origins = ["http://localhost:3000", "http://localhost:5173"]
+_env_origins = os.environ.get("CORS_ORIGINS")
+_origins = [o.strip() for o in _env_origins.split(",")] if _env_origins else _default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

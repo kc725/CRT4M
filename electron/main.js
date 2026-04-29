@@ -19,7 +19,7 @@ function createWindow() {
   const dev = process.env.ELECTRON_DEV === 'true' || process.env.NODE_ENV === 'development';
 
   if (dev) {
-    win.loadURL('http://localhost:3000');
+    win.loadURL(`http://localhost:${process.env.DEV_PORT || 3000}`);
     win.webContents.openDevTools();
   } else {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));

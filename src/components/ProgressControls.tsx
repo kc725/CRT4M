@@ -57,6 +57,7 @@ export function ProgressControls({
 
         <input
           type="range"
+          aria-label="Page slider"
           min="1"
           max={totalPages}
           value={currentPage}
@@ -86,6 +87,7 @@ export function ProgressControls({
         <span className="text-[10px] uppercase tracking-widest font-headline text-outline">Page</span>
         <input
           type="number"
+          aria-label="Current page number"
           value={currentPage}
           onChange={(e) => {
             const page = Math.min(totalPages, Math.max(1, parseInt(e.target.value) || 1));

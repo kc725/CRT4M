@@ -31,22 +31,24 @@ export function Header({ isUploading, onImportClick, isSidebarOpen, onToggleSide
       <div className="flex-1 max-w-md mx-8">
         <div className="relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/60" />
-          <input 
-            type="text" 
-            placeholder="Search in document..." 
+          <input
+            type="text"
+            aria-label="Search in document"
+            placeholder="Search in document..."
             className="w-full bg-surface-variant border border-outline-variant/40 rounded-md px-10 py-2 text-sm font-body text-on-surface placeholder:text-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           />
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={onToggleSidebar}
+          aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           className="p-2 text-primary hover:text-on-surface transition-colors cursor-pointer"
         >
           {isSidebarOpen ? <ChevronLast size={20} /> : <ChevronFirst size={20} />}
         </button>
-        <button className="p-2 text-primary hover:text-on-surface transition-colors cursor-pointer">
+        <button aria-label="Settings" className="p-2 text-primary hover:text-on-surface transition-colors cursor-pointer">
           <Settings size={20} />
         </button>
       </div>
