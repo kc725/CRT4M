@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:/Users/kevin.chen/Documents/Code/CRT4M\" log --oneline -20)",
+      "Bash(git -C \"c:/Users/kevin.chen/Documents/Code/CRT4M\" branch -a)",
+      "Bash(git -C \"c:/Users/kevin.chen/Documents/Code/CRT4M\" log --oneline -5 sandwich)",
+      "Bash(git -C \"c:/Users/kevin.chen/Documents/Code/CRT4M\" diff main..sandwich --stat)"
+    ]
+  }
+}

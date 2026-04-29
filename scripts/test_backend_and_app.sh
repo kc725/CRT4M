@@ -30,7 +30,11 @@ if [ ! -d "$BACKEND_DIR/venv" ]; then
 fi
 
 # shellcheck source=/dev/null
-source "$BACKEND_DIR/venv/bin/activate"
+if [ -d "$BACKEND_DIR/venv/Scripts" ]; then
+  source "$BACKEND_DIR/venv/Scripts/activate"
+else
+  source "$BACKEND_DIR/venv/bin/activate"
+fi
 
 echo "Installing backend dependencies..."
 pip install -r "$BACKEND_DIR/requirements.txt" >/dev/null

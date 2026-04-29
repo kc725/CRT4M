@@ -58,7 +58,16 @@ npm install
 
 ```bash
 python3 -m venv backend/venv
+
+# Linux / macOS
 source backend/venv/bin/activate
+
+# Windows (PowerShell)
+backend\venv\Scripts\Activate.ps1
+
+# Windows (Git Bash)
+source backend/venv/Scripts/activate
+
 pip install -r backend/requirements.txt
 ```
 
