@@ -16,6 +16,11 @@ import { Document, Page, pdfjs } from 'react-pdf';
 
 import { DocumentData } from '../types/document';
 
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ReaderProps {
