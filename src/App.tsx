@@ -1,4 +1,5 @@
 import React, { Suspense, useCallback, useRef, useState } from 'react';
+import { pdfjs } from 'react-pdf';
 import { Header } from './components/Header';
 import { ProgressControls } from './components/ProgressControls';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -6,6 +7,11 @@ import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
 import { DocumentData } from './types/document';
 import type { ReaderHandle } from './components/Reader';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 const Reader = React.lazy(() => import('./components/Reader').then(m => ({ default: m.Reader })));
 const Sidebar = React.lazy(() => import('./components/Sidebar').then(m => ({ default: m.Sidebar })));

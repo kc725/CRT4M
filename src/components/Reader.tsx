@@ -16,12 +16,6 @@ import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperat
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 
-// react-pdf ships its own pdfjs-dist. Point the worker at it.
-// Using import.meta.url keeps the path Vite-resolvable without a public/ copy.
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
 
 // Import the CSS that react-pdf needs for text + annotation layers.
 // Add these two imports to your project (they ship with react-pdf):
