@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProgressControlsProps {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TranslationResult, SummaryResult, VocabResult } from '../types/document';
+import { TranslationResult, SummaryResult, VocabResult, QAResult } from '../types/document';
 import { API_BASE } from '../constants/api';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
@@ -31,11 +31,12 @@ export function useAnalysis() {
   const [translation, setTranslation] = useState<AnalysisState<TranslationResult>>(initial());
   const [summary, setSummary] = useState<AnalysisState<SummaryResult>>(initial());
   const [vocab, setVocab] = useState<AnalysisState<VocabResult>>(initial());
+  const [qa, setQa] = useState<AnalysisState<QAResult>>(initial());
 
   const analyze = async (
     tab: 'translation' | 'notes' | 'vocab',
     text: string
-  ) => {
+  ): Promise<void> => {
     if (!text.trim()) return;
 
     if (tab === 'translation') {
@@ -68,11 +69,23 @@ export function useAnalysis() {
     }
   };
 
+  const analyzeQA = async (question: string, context: string): Promise<void> => {
+    if (!question.trim() || !context.trim()) return;
+    setQa({ data: null, status: 'loading', error: null });
+    try {
+      const data = await post<QAResult>('/api/analyze/qa', { question, context });
+      setQa({ data, status: 'success', error: null });
+    } catch (e) {
+      setQa({ data: null, status: 'error', error: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
   const reset = () => {
     setTranslation(initial());
     setSummary(initial());
     setVocab(initial());
+    setQa(initial());
   };
 
-  return { translation, summary, vocab, analyze, reset };
+  return { translation, summary, vocab, qa, analyze, analyzeQA, reset };
 }

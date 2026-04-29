@@ -41,3 +41,11 @@ export interface VocabWord {
 export interface VocabResult {
   words: VocabWord[];
 }
+
+export interface QAResult {
+  answer: string;
+  confidence: 'high' | 'medium' | 'low';
+  relevant_quote: string | null;
+}
+
+export type SidebarTab = 'translation' | 'notes' | 'vocab' | 'qa';

@@ -36,6 +36,7 @@ async def get_config():
         "available_providers": list(cfg.MODELS.keys()),
         "available_models": cfg.MODELS,
         "runtime_model_overrides": cfg.RUNTIME_MODEL_OVERRIDES,
+        "api_key_status": {p: bool(cfg.API_KEYS.get(p)) for p in cfg.MODELS},
     }
 
 class ProviderRequest(BaseModel):

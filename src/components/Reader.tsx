@@ -11,7 +11,7 @@
  * For plain-text documents the PDF path is skipped and paragraphs are rendered directly.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
 import { DocumentData } from '../types/document';

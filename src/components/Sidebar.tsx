@@ -1,13 +1,14 @@
-import React from 'react';
-import { Languages, FileText, BookOpen, Bookmark, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Languages, FileText, BookOpen, MessageCircleQuestion, Bookmark, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SidebarTab } from './common/SidebarTab';
 import { useAnalysis } from '../hooks/useAnalysis';
+import type { SidebarTab as SidebarTabId } from '../types/document';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
-  selectedTab: 'translation' | 'notes' | 'vocab';
-  onTabChange: (tab: 'translation' | 'notes' | 'vocab') => void;
+  selectedTab: SidebarTabId;
+  onTabChange: (tab: SidebarTabId) => void;
   selectedText: string;
 }
 
@@ -52,7 +53,8 @@ export function Sidebar({
   onTabChange,
   selectedText,
 }: SidebarProps) {
-  const { translation, summary, vocab, analyze } = useAnalysis();
+  const { translation, summary, vocab, qa, analyze, analyzeQA } = useAnalysis();
+  const [question, setQuestion] = useState('');
 
   const hasSelection = selectedText.trim().length > 0;
 
@@ -115,6 +117,12 @@ export function Sidebar({
           label="Vocab"
           isActive={selectedTab === 'vocab'}
           onClick={() => onTabChange('vocab')}
+        />
+        <SidebarTab
+          icon={<MessageCircleQuestion size={18} />}
+          label="Q&A"
+          isActive={selectedTab === 'qa'}
+          onClick={() => onTabChange('qa')}
         />
       </nav>
 
@@ -248,7 +256,7 @@ export function Sidebar({
                         Themes
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {summary.data.themes.map((theme, i) => (
+                        {summary.data.themes.map((theme) => (
                           <span
                             key={theme}
                             className="px-3 py-1 bg-primary-container/60 text-on-primary-container text-xs font-headline font-bold rounded-full"
@@ -292,7 +300,7 @@ export function Sidebar({
 
               {vocab.status === 'success' && vocab.data && (
                 <div className="space-y-3">
-                  {vocab.data.words.map((w, i) => (
+                  {vocab.data.words.map((w) => (
                     <div
                       key={w.word}
                       className="p-3 bg-surface rounded-xl border border-outline-variant/20 shadow-sm space-y-1"
@@ -318,12 +326,80 @@ export function Sidebar({
             </motion.div>
           )}
 
+          {/* ── Q&A ── */}
+          {selectedTab === 'qa' && (
+            <motion.div
+              key="qa"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-4"
+            >
+              <textarea
+                value={question}
+                onChange={e => setQuestion(e.target.value)}
+                placeholder="Ask a question about the selected text…"
+                rows={3}
+                className="w-full bg-surface-variant border border-outline-variant/40 rounded-md px-3 py-2.5 text-sm font-body text-on-surface placeholder:text-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+              />
+
+              {hasSelection && question.trim() && qa.status !== 'loading' && (
+                <AnalyseButton
+                  label="Ask"
+                  onClick={() => analyzeQA(question, selectedText)}
+                />
+              )}
+
+              {!hasSelection && qa.status === 'idle' && (
+                <EmptyState message="Select text, then ask a question." />
+              )}
+
+              {qa.status === 'loading' && <LoadingState />}
+
+              {qa.status === 'error' && (
+                <ErrorState message={qa.error ?? 'Q&A failed.'} />
+              )}
+
+              {qa.status === 'success' && qa.data && (
+                <div className="space-y-4">
+                  <section className="p-4 bg-surface rounded-xl border border-outline-variant/20 shadow-sm">
+                    <span className="text-[10px] uppercase tracking-widest font-headline text-primary mb-2 block">
+                      Answer
+                    </span>
+                    <p className="text-sm font-body leading-relaxed text-on-surface">
+                      {qa.data.answer}
+                    </p>
+                  </section>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-widest font-headline text-outline">
+                      Confidence
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-headline font-bold uppercase tracking-widest ${
+                      qa.data.confidence === 'high' ? 'bg-green-100 text-green-700' :
+                      qa.data.confidence === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {qa.data.confidence}
+                    </span>
+                  </div>
+
+                  {qa.data.relevant_quote && (
+                    <blockquote className="border-l-2 border-primary/40 pl-3 text-sm font-body italic text-on-surface/70 leading-relaxed">
+                      &ldquo;{qa.data.relevant_quote}&rdquo;
+                    </blockquote>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </div>
 
       {/* Footer */}
       <div className="pt-6 border-t border-outline-variant/10 px-4">
-        <button className="w-full bg-primary text-surface py-3 rounded-md font-headline text-[10px] font-bold uppercase tracking-widest hover:bg-on-surface transition-colors flex items-center justify-center gap-2 cursor-pointer">
+        <button disabled className="w-full bg-primary/40 text-surface/60 py-3 rounded-md font-headline text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed">
           <Bookmark size={14} />
           Save to Vocab
         </button>

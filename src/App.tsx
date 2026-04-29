@@ -1,6 +1,7 @@
 import React, { Suspense, useCallback, useState } from 'react';
 import { Header } from './components/Header';
 import { ProgressControls } from './components/ProgressControls';
+import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
@@ -21,6 +22,7 @@ export default function App() {
     content: [],
     totalPages: 0,
   });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const { isSidebarOpen, setIsSidebarOpen, selectedTab, setSelectedTab } = useSidebarState();
   const { fileInputRef, isUploading, uploadError, clearUploadError, handleImportClick, handleFileUpload } = useDocumentUpload(
@@ -48,6 +50,12 @@ export default function App() {
         onImportClick={handleImportClick}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onSettingsClick={() => setIsSettingsOpen(true)}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
 
       <ErrorBoundary>
