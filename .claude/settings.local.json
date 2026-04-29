@@ -1,5 +1,9 @@
 {
   "includeCoAuthoredBy": false,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(git -C \"c:/Users/kevin.chen/Documents/Code/CRT4M\" log --oneline -20)",
