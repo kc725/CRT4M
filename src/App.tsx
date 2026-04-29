@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useState } from 'react';
 import { pdfjs } from 'react-pdf';
 import { Header } from './components/Header';
 import { ProgressControls } from './components/ProgressControls';
@@ -6,7 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { useDocumentUpload } from './hooks/useDocumentUpload';
 import { useSidebarState } from './hooks/useSidebarState';
 import { DocumentData } from './types/document';
-import type { ReaderHandle } from './components/Reader';
+
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -28,9 +28,6 @@ export default function App() {
     content: [],
     totalPages: 0,
   });
-
-  // Ref to the Reader so we can call scrollToPage imperatively.
-  const readerRef = useRef<ReaderHandle>(null);
 
   const { isSidebarOpen, setIsSidebarOpen, selectedTab, setSelectedTab } = useSidebarState();
   const { fileInputRef, isUploading, uploadError, clearUploadError, handleImportClick, handleFileUpload } = useDocumentUpload(
@@ -86,7 +83,6 @@ export default function App() {
           <ErrorBoundary>
             <Suspense>
               <Reader
-                ref={readerRef}
                 document={document}
                 currentPage={currentPage}
                 onTextSelect={handleTextSelection}
@@ -102,8 +98,6 @@ export default function App() {
             onPreviousPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
             onNextPage={() => setCurrentPage((p) => Math.min(document.totalPages || 1, p + 1))}
             onLastPage={() => setCurrentPage(document.totalPages)}
-            // Thread scrollToPage through to the virtualised list.
-            onScrollToPage={(page) => readerRef.current?.scrollToPage(page)}
           />
         </div>
       </main>
